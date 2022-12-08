@@ -63,16 +63,25 @@ int main() {
 
 		//3 comparisons:
 
-		//≥мена гравц≥в €к≥ мають персонаж≥в з такими же классами €к хоч один з персонаж≥в гравц≥ € ≥дом @INTEGER0@
+		//≥мена гравц≥в €к≥ мають персонаж≥в з такими же классами €к хоч один з персонаж≥в гравц€ з ≥дом @INTEGER0@
 		dbsqlparamview(db, "SELECT Players.name FROM Characters LEFT JOIN Players ON playerid=Players.ID WHERE classid IN ( SELECT classid FROM Characters WHERE playerid=@INTEGER0@ );", 1, 0),
 
 		//ун≥кальн≥ пари персонаж≥в з однаковим р≥внем (A.id < B.id щоб персонаж≥ не повторювались)
 		dbsqlparamview(db, "SELECT A.ID, A.Name, B.ID, B.Name FROM Characters AS A, Characters AS B WHERE A.level = B.level AND A.id < B.id;", 0, 0),
 
 		//≥д та назви гравц≥в, у €ких к≥льк≥сть персонаж≥в така сама €к у гравц€ з ≥дом @INTEGER0@
-		dbsqlparamview(db, "SELECT Players.ID, Players.name FROM Characters LEFT JOIN Players ON Players.id = playerid GROUP BY playerid HAVING COUNT(Characters.ID) in ( SELECT COUNT(ID) FROM Characters WHERE playerid = 1 );", 1, 0)
+		dbsqlparamview(db, "SELECT Players.ID, Players.name FROM Characters LEFT JOIN Players ON Players.id = playerid GROUP BY playerid HAVING COUNT(Characters.ID) in ( SELECT COUNT(ID) FROM Characters WHERE playerid = 1 );", 1, 0),
 
+		//ўе 3 comparisons:
 
+		//≥мена гравц≥в €к≥ мають персонаж≥в з такими же классами €к хоч один з персонаж≥в гравц€ з ≥дом @INTEGER0@, але
+		//не мають клас≥в €к у хоч одного з персонаж≥в гравц€ з ≥дом @INTEGER1@
+		dbsqlparamview(db, "SELECT Players.name FROM Characters LEFT JOIN Players ON playerid=Players.ID WHERE classid IN ( SELECT classid FROM Characters WHERE playerid=@INTEGER0@ ) AND classid NOT IN ( SELECT classid FROM Characters WHERE playerid=@INTEGER1@ );", 2, 0),
+		//≥мена гравц≥в €к≥ мають персонаж≥в що вход€ть в команду з персонажем гравц€ з ≥дом @INTEGER0@
+		dbsqlparamview(db, "SELECT Players.name FROM Players WHERE Players.ID IN (SELECT playerid FROM Characters WHERE Characters.ID IN (SELECT characterid FROM CharacterTeamConnections WHERE teamid IN ( SELECT teamid FROM CharacterTeamConnections WHERE characterid IN ( SELECT ID FROM Characters WHERE playerid=@INTEGER0@ ) ) ) );", 1, 0),
+		//≥мена гравц≥в €к≥ мають персонаж≥в що вход€ть в команду з персонажем гравц€ з ≥дом @INTEGER0@, але
+		//не мають персонаж≥в що вход€ть в команду з персонажем гравц€ з ≥дом @INTEGER1@
+		dbsqlparamview(db, "SELECT Players.name FROM Players WHERE Players.ID IN (SELECT playerid FROM Characters WHERE Characters.ID IN (SELECT characterid FROM CharacterTeamConnections WHERE teamid IN ( SELECT teamid FROM CharacterTeamConnections WHERE characterid IN ( SELECT ID FROM Characters WHERE playerid=@INTEGER0@ ) ) ) ) AND Players.ID NOT IN (SELECT playerid FROM Characters WHERE Characters.ID IN (SELECT characterid FROM CharacterTeamConnections WHERE teamid IN ( SELECT teamid FROM CharacterTeamConnections WHERE characterid IN ( SELECT ID FROM Characters WHERE playerid=@INTEGER1@ ) ) ) );", 2, 0)
 	};
 	for (int i=0; i < sizeof(paramviews) / sizeof(dbsqlparamview); i++) {
 		dbmenu.push_back(static_cast<DBSQLobj*>(&paramviews[i]));
